@@ -4,11 +4,13 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
+import android.content.res.Resources.Theme;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.bumptech.glide.load.Option;
 import com.bumptech.glide.load.Options;
 import com.bumptech.glide.load.ResourceDecoder;
 import com.bumptech.glide.load.engine.Resource;
@@ -23,6 +25,11 @@ import java.util.List;
  * other packages.
  */
 public class ResourceDrawableDecoder implements ResourceDecoder<Uri, Drawable> {
+
+  /** Specifies a {@link Theme} which will be used to load the drawable. */
+  public static final Option<Theme> THEME =
+      Option.memory("com.bumptech.glide.load.resource.bitmap.Downsampler.Theme");
+
   /**
    * The package name to provide {@link Resources#getIdentifier(String, String, String)} when trying
    * to find system resource ids.
@@ -62,7 +69,11 @@ public class ResourceDrawableDecoder implements ResourceDecoder<Uri, Drawable> {
     Context targetContext = findContextForPackage(source, packageName);
     @DrawableRes int resId = findResourceIdFromUri(targetContext, source);
     // We can't get a theme from another application.
-    Drawable drawable = DrawableDecoderCompat.getDrawable(context, targetContext, resId);
+    Theme theme = options.get(THEME);
+    Drawable drawable =
+        theme == null
+            ? DrawableDecoderCompat.getDrawable(context, targetContext, resId)
+            : DrawableDecoderCompat.getDrawable(context, resId, theme);
     return NonOwnedDrawableResource.newInstance(drawable);
   }
 
